@@ -131,20 +131,40 @@ export default function HomePage() {
 					if (response.data?.found) {
 						enqueueSnackbar("Item Found Successfully", { variant: "success" });
 						const ItemDetails = getValues("itemDetails");
-						let foundIndex = ItemDetails.findIndex((item) => item.itemName === itemname);
+						let tempid = response.data.id;
+						// let foundIndex = ItemDetails.findIndex((item) => item.itemName === itemname);
+						let foundIndex = ItemDetails.findIndex((item) => item.itemId === tempid);
 						setFocus("itemName");
 						if (foundIndex !== -1) {
 							// If the item exists, increment its quantity by one
-							let qty = Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
-							console.log("qauntitty")
-							console.log(qty );
-							setValue(`itemDetails.${foundIndex}.quantity`, qty);
-							trigger(`itemDetails.${foundIndex}.quantity`);
-							setFocus("itemName");
+							// let qty = Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
+							// console.log("qauntitty")
+							// console.log(qty );
+							// setValue(`itemDetails.${foundIndex}.quantity`, qty);
+							// trigger(`itemDetails.${foundIndex}.quantity`);
+							// setFocus("itemName");
+							const temparr = getValues(`itemDetails.${foundIndex}.subitems`);
+							console.log("tmparr");
+							console.log(temparr);
+							let serialIndex = temparr.findIndex((item) => item.itemName === itemname);
+							if(serialIndex === -1){
+								console.log("item doesnt exist in subitems");
+								const obj = {
+									itemName: itemname,
+									quantity: 1,
+									status: "Pending",
+									isserialitem : response?.data?.isserialitem
+								}
+								temparr.push(obj);
+								setValue(`itemDetails.${foundIndex}.subitems`, temparr);
+								console.log("updated subites")
+								console.log(ItemDetails);
+							}
+
 						} else {
 							// If the item is not found, add it to the list with quantity 1
-
-							append({ name : response?.data?.name, itemName: itemname, quantity: 1, itemId: response?.data?.id, status: "Pending" , isserialitem : response?.data?.isserialitem });
+							// name : response?.data?.name, itemName: itemname, quantity: 1, itemId: response?.data?.id, status: "Pending" , isserialitem : response?.data?.isserialitem }
+							append({ name : response?.data?.name,  itemId: response?.data?.id, subItems : [] });
 							setFocus("itemName");
 						}
 						// Update the data state after the asynchronous operation has completed
