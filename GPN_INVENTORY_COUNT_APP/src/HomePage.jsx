@@ -2,6 +2,10 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import {
   Button,
@@ -173,46 +177,87 @@ export default function HomePage() {
     }
   };
 
-	const isItemExist = async (itemname) => {
-		try {
-			if (itemname) {
-				const response = await axios.get(`${window.location.href}&type=finditem&itemName=${itemname}`);
-				// console.log("hi")
-				console.log(response)
-				if (response.status === 200) {
-					if (response.data?.found) {
-						enqueueSnackbar("Item Found Successfully", { variant: "success" });
-						const ItemDetails = getValues("itemDetails");
-						let foundIndex = ItemDetails.findIndex((item) => item.itemName === itemname);
-						setFocus("itemName");
-						if (foundIndex !== -1) {
-							// If the item exists, increment its quantity by one
-							let qty = Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
-							console.log("qauntitty")
-							console.log(qty );
-							setValue(`itemDetails.${foundIndex}.quantity`, qty);
-							trigger(`itemDetails.${foundIndex}.quantity`);
-							setFocus("itemName");
-						} else {
-							// If the item is not found, add it to the list with quantity 1
-
-							append({ name : response?.data?.name, itemName: itemname, quantity: 1, itemId: response?.data?.id, status: "Pending" , isserialitem : response?.data?.isserialitem });
-							setFocus("itemName");
+  const isItemExist = async (itemname) => {
+	try {
+		if (itemname) {
+			const response = await axios.get(`${window.location.href}&type=finditem&itemName=${itemname}`);
+			// console.log("hi")
+			console.log(response)
+			if (response.status === 200) {
+				if (response.data?.found) {
+					enqueueSnackbar("Item Found Successfully", { variant: "success" });
+					const ItemDetails = getValues("itemDetails");
+					let tempid = response.data.id;
+					// let foundIndex = ItemDetails.findIndex((item) => item.itemName === itemname);
+					let foundIndex = ItemDetails.findIndex((item) => item.itemId === tempid);
+					setFocus("itemName");
+					if (foundIndex !== -1) {
+						// If the item exists, increment its quantity by one
+						// let qty = Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
+						// console.log("qauntitty")
+						// console.log(qty );
+						// setValue(`itemDetails.${foundIndex}.quantity`, qty);
+						// trigger(`itemDetails.${foundIndex}.quantity`);
+						// setFocus("itemName");
+						const temparr = getValues(`itemDetails.${foundIndex}.subitems`);
+						console.log("tmparr");
+						console.log(temparr);
+						let serialIndex = temparr.findIndex((item) => item.itemName === itemname);
+						if(serialIndex === -1){
+							console.log("item doesnt exist in subitems");
+							const obj = {
+								itemName: itemname,
+								quantity: 1,
+								status: "Pending",
+								isserialitem : response?.data?.isserialitem
+							}
+							temparr.push(obj);
+							setValue(`itemDetails.${foundIndex}.subitems`, temparr);
+							console.log("updated subites")
+							console.log(ItemDetails);
 						}
-						// Update the data state after the asynchronous operation has completed
+
 					} else {
-						enqueueSnackbar("Item Does Not Exist", { variant: "error" });
+						// If the item is not found, add it to the list with quantity 1
+						// name : response?.data?.name, itemName: itemname, quantity: 1, itemId: response?.data?.id, status: "Pending" , isserialitem : response?.data?.isserialitem }
+						append({ name : response?.data?.name,  itemId: response?.data?.id, subItems : [] });
+						let foundd = ItemDetails.findIndex((item) => item.itemId === response?.data?.id);
+						const temparr = getValues(`itemDetails.${foundd}.subitems`);
+						console.log("tmparr");
+						console.log(temparr);
+						let serialIndex = temparr.findIndex((item) => item.itemName === itemname);
+						if(serialIndex === -1){
+							console.log("item doesnt exist in subitems");
+							const obj = {
+								itemName: itemname,
+								quantity: 1,
+								status: "Pending",
+								isserialitem : response?.data?.isserialitem
+							}
+							temparr.push(obj);
+							setValue(`itemDetails.${foundIndex}.subitems`, temparr);
+							console.log("updated subites")
+							console.log(ItemDetails);
+						}
 						setFocus("itemName");
 					}
+					// Update the data state after the asynchronous operation has completed
+				} else {
+					enqueueSnackbar("Item Does Not Exist", { variant: "error" });
+					setFocus("itemName");
 				}
-				setValue("itemName", "");
 			}
-		} catch (error) {
-			enqueueSnackbar(error?.message || "Failed to Fetch Item", {
-				variant: "error",
-			});
+			setValue("itemName", "");
 		}
-	};
+	} catch (error) {
+		enqueueSnackbar(error?.message || "Failed to Fetch Item", {
+			variant: "error",
+		});
+	}
+};
+
+
+
 	useEffect(async () => {
 		await dispatch(fetchLocations());
 		setValue("location", localStorage.getItem("Location") || "8");
@@ -335,90 +380,83 @@ export default function HomePage() {
             display={"flex"}
             flexDirection={isSmallScreen ? "column" : "row"}
           >
-            {fields.length ? (
-              <Box>
-                <Container>
-                  <TableContainer>
-                    <Table aria-label="simple table">
-                      <TableHead>
-                        <TableRow>
-                          <CssTableCell>Name</CssTableCell>
-                          <CssTableCell>Item</CssTableCell>
-                          <CssTableCell>Quantity</CssTableCell>
-                          <CssTableCell>Actions</CssTableCell>
-                        </TableRow>
-                      </TableHead>
-                      {/* {conso} */}
-                      <TableBody>
-                        {/* {console.log("printng fields")} */}
-                        {console.log(fields)}
-                        {fields.map((field, index) => (
-                          <TableRow key={field.id}>
-                            <CssTableCell>
-                              <Controller
-                                name={`itemDetails.${index}.name`}
-                                fullWidth
-                                control={control}
-                                render={({ field }) => (
-                                  <TextField
-                                    {...field}
-                                    size="small"
-                                    sx={{ p: 0 }}
-                                  />
-                                )}
-                              />
-                            </CssTableCell>
-                            <CssTableCell>
-                              <Controller
-                                name={`itemDetails.${index}.itemName`}
-                                fullWidth
-                                control={control}
-                                render={({ field }) => (
-                                  <TextField
-                                    {...field}
-                                    size="small"
-                                    sx={{ p: 0 }}
-                                  />
-                                )}
-                              />
-                            </CssTableCell>
-                            <CssTableCell>
-                              <CssTableCell>
-                                <Controller
-                                  name={`itemDetails.${index}.quantity`}
-                                  fullWidth
-                                  control={control}
-                                  render={({ field }) => (
-                                    <TextField
-                                      {...field}
-                                      type="number"
-                                      onChange={(e) => {
-                                        let inputValue = e.target.value;
-                                        field.onChange(
-                                          Number(inputValue).toString()
-                                        );
-                                      }}
-                                      size="small"
-                                    />
-                                  )}
-                                />
-                              </CssTableCell>
-                            </CssTableCell>
-                            <CssTableCell>
-                              <Button onClick={() => remove(index)}>
-                                <DeleteOutline />
-                              </Button>
-                            </CssTableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Container>
-              </Box>
-            ) : (
-              ""
-            )}
+              {fields.map((item, index) => (
+     
+	 <div key={item.id}>
+	   <Accordion>
+		 <AccordionSummary
+		   expandIcon={<ExpandMoreIcon />}
+		   aria-controls="panel2a-content"
+		   id="panel2a-header"
+		 >
+		   <Typography>{item.name}</Typography>
+		 </AccordionSummary>
+		 <AccordionDetails>
+		   <Typography>
+			
+	   <Box>
+		 <Container>
+		   <TableContainer>
+			 <Table aria-label="simple table">
+			   <TableHead>
+				 <TableRow>
+				   <CssTableCell>Item</CssTableCell>
+				   <CssTableCell>Quantity</CssTableCell>
+				   <CssTableCell>Actions</CssTableCell>
+				 </TableRow>
+			   </TableHead>
+			  
+			   <TableBody>
+				 {console.log("hi from inside")}
+				 {console.log(item.subitems)}
+				  {item.subitems.map((a,i)=>(	
+					 <>     
+					   
+				   <TableRow >
+	 
+					 <CssTableCell>
+						   <TextField
+							 size="small"
+							 sx={{ p: 0 }}
+						  
+							 defaultValue={a.id}
+						   />
+					 </CssTableCell>
+					 <CssTableCell>
+					   {/* <CssTableCell> */}
+						 {/* <Controller */}
+						   {/* name={} */}
+						   {/* fullWidth */}
+						   {/* control={control} */}
+						   
+							 <TextField
+							   type="number"
+							   defaultValue={a.qty}
+							   size="small"
+							 />
+						   
+						 {/* /> */}
+					   {/* </CssTableCell> */}
+					 </CssTableCell>
+					 <CssTableCell>
+					   <Button>
+						Delete
+					   </Button>
+					 </CssTableCell>
+				   </TableRow>
+					   </>
+				 ))}
+			   </TableBody>
+			 </Table>
+		   </TableContainer>
+		 </Container>
+	   </Box>
+			 
+		   </Typography>
+		 </AccordionDetails>
+	   </Accordion>
+	 </div>
+   ))}
             {fields.length ? (
               <Box>
                 <LoadingButton
