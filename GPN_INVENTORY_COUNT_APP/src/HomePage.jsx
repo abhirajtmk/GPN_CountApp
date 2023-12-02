@@ -294,6 +294,7 @@ export default function HomePage() {
 													<CssTableCell>Actions</CssTableCell>
 												</TableRow>
 											</TableHead>
+											{/* {conso} */}
 											<TableBody>
 												{/* {console.log("printng fields")} */}
 												{console.log(fields)}
