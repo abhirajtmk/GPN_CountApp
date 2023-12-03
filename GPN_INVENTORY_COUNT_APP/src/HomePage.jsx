@@ -99,6 +99,10 @@ export default function HomePage() {
     control, // control props comes from useForm (optional: if you are using FormContext)
     name: "itemDetails", // unique name for your Field Array
   });
+
+  const newfieldarr = getValues("itemDetails");
+  // console.log("newfieldarr")
+  // console.log(newfieldarr)
   const fetchExistingInventory = async () => {
     console.log("before fetch");
     let existingIvt = await axios.get(
@@ -177,6 +181,22 @@ export default function HomePage() {
     }
   };
 
+  const handleDelete =  (index , id , parentindex)=>{
+    console.log(id + " " + index)
+    const ItemDetails = getValues("itemDetails");
+    let foundIndex = ItemDetails.findIndex((item) => item.itemId === id);
+    const temparr = getValues(`itemDetails.${foundIndex}.subItems`);
+    temparr.splice(index, 1);
+    setValue(`itemDetails.${foundIndex}.subItems`, temparr);
+    
+console.log(temparr);
+if(temparr.length === 0){
+   remove(parentindex);
+   trigger();
+}
+trigger();
+  }
+
   const isItemExist = async (itemname) => {
 	try {
 		if (itemname) {
@@ -184,14 +204,18 @@ export default function HomePage() {
 			// console.log("hi")
 			console.log(response)
 			if (response.status === 200) {
+				console.log("response status 200")
 				if (response.data?.found) {
-					enqueueSnackbar("Item Found Successfully", { variant: "success" });
+					console.log("response found")
+					// enqueueSnackbar("Item Found Successfully", { variant: "success" });
 					const ItemDetails = getValues("itemDetails");
-					let tempid = response.data.id;
+					// let tempid = response.data.id;
 					// let foundIndex = ItemDetails.findIndex((item) => item.itemName === itemname);
-					let foundIndex = ItemDetails.findIndex((item) => item.itemId === tempid);
+					let foundIndex = ItemDetails.findIndex((item) => item.itemId === response?.data?.id);
 					setFocus("itemName");
+					console.log("found index" + foundIndex)
 					if (foundIndex !== -1) {
+						console.log("if !== -1")
 						// If the item exists, increment its quantity by one
 						// let qty = Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
 						// console.log("qauntitty")
@@ -199,7 +223,7 @@ export default function HomePage() {
 						// setValue(`itemDetails.${foundIndex}.quantity`, qty);
 						// trigger(`itemDetails.${foundIndex}.quantity`);
 						// setFocus("itemName");
-						const temparr = getValues(`itemDetails.${foundIndex}.subitems`);
+						const temparr = getValues(`itemDetails.${foundIndex}.subItems`);
 						console.log("tmparr");
 						console.log(temparr);
 						let serialIndex = temparr.findIndex((item) => item.itemName === itemname);
@@ -212,20 +236,29 @@ export default function HomePage() {
 								isserialitem : response?.data?.isserialitem
 							}
 							temparr.push(obj);
-							setValue(`itemDetails.${foundIndex}.subitems`, temparr);
+							setValue(`itemDetails.${foundIndex}.subItems`, temparr);
 							console.log("updated subites")
 							console.log(ItemDetails);
 						}
+						console.log(ItemDetails);
+            trigger(`itemDetails.${foundIndex}.subItems`);
+            trigger();
 
 					} else {
+						console.log("else")
 						// If the item is not found, add it to the list with quantity 1
 						// name : response?.data?.name, itemName: itemname, quantity: 1, itemId: response?.data?.id, status: "Pending" , isserialitem : response?.data?.isserialitem }
 						append({ name : response?.data?.name,  itemId: response?.data?.id, subItems : [] });
 						let foundd = ItemDetails.findIndex((item) => item.itemId === response?.data?.id);
-						const temparr = getValues(`itemDetails.${foundd}.subitems`);
+						console.log("foundd " + foundd)
+						const temparr = getValues(`itemDetails.${foundd}.subItems`);
+						console.log("foundd " + foundd)
 						console.log("tmparr");
 						console.log(temparr);
-						let serialIndex = temparr.findIndex((item) => item.itemName === itemname);
+            var serialIndex = -1;
+            if(temparr.length > 1){
+						 serialIndex = temparr.findIndex((item) => item.itemName === itemname);
+            }
 						if(serialIndex === -1){
 							console.log("item doesnt exist in subitems");
 							const obj = {
@@ -235,11 +268,14 @@ export default function HomePage() {
 								isserialitem : response?.data?.isserialitem
 							}
 							temparr.push(obj);
-							setValue(`itemDetails.${foundIndex}.subitems`, temparr);
+							setValue(`itemDetails.${foundd}.subItems`, temparr);
+              trigger(`itemDetails.${foundd}.subItems`);
 							console.log("updated subites")
 							console.log(ItemDetails);
 						}
+						console.log(ItemDetails);
 						setFocus("itemName");
+            
 					}
 					// Update the data state after the asynchronous operation has completed
 				} else {
@@ -378,11 +414,15 @@ export default function HomePage() {
           </Box>
           <Box
             display={"flex"}
-            flexDirection={isSmallScreen ? "column" : "row"}
-          >
+            flexDirection={"column"}
+            width={'100%'}
+          >     {console.log("hi from inside fields")}
+		  {console.log(fields)}
               {fields.map((item, index) => (
      
-	 <div key={item.id}>
+	 <div key={item.itemId}>
+		{console.log("hi from doubleinside item")}
+		  {console.log(item)}
 	   <Accordion>
 		 <AccordionSummary
 		   expandIcon={<ExpandMoreIcon />}
@@ -407,40 +447,30 @@ export default function HomePage() {
 			   </TableHead>
 			  
 			   <TableBody>
-				 {console.log("hi from inside")}
-				 {console.log(item.subitems)}
-				  {item.subitems.map((a,i)=>(	
+				
+				  {item.subItems.map((a,i)=>(	
 					 <>     
-					   
+           {console.log(a)}
 				   <TableRow >
-	 
 					 <CssTableCell>
-						   <TextField
+						   {/* <TextField
 							 size="small"
 							 sx={{ p: 0 }}
-						  
-							 defaultValue={a.id}
-						   />
+							 defaultValue={a.itemName}
+						   /> */}
+               <p>{a.itemName}</p>
 					 </CssTableCell>
 					 <CssTableCell>
-					   {/* <CssTableCell> */}
-						 {/* <Controller */}
-						   {/* name={} */}
-						   {/* fullWidth */}
-						   {/* control={control} */}
-						   
-							 <TextField
+							 {/* <TextField
 							   type="number"
-							   defaultValue={a.qty}
+							   defaultValue={a.quantity}
 							   size="small"
-							 />
-						   
-						 {/* /> */}
-					   {/* </CssTableCell> */}
+							 /> */}
+               <p>{a.quantity}</p>
 					 </CssTableCell>
 					 <CssTableCell>
-					   <Button>
-						Delete
+					   <Button onClick={()=>{handleDelete(i ,item.itemId , index)}}>
+						     <DeleteOutline/>
 					   </Button>
 					 </CssTableCell>
 				   </TableRow>
