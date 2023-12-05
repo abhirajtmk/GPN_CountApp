@@ -33,7 +33,9 @@ import CustomizedInputsStyled from "./components/CustomTextField";
 import ItemInputFormTable from "./components/ItemInputFormTable";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
 import ItemsAccordion from "./components/ItemsAccordion";
-import { get } from "lodash";
+import { first, get } from "lodash";
+import { useState } from "react";
+import { Check } from "@mui/icons-material";
 
 const CssTableCell = styled(TableCell)((props) => ({
   padding: 2,
@@ -48,6 +50,10 @@ const schema = yup.object({
 const defaultTheme = createTheme();
 
 export default function HomePage() {
+
+ const[rel , setRel] = useState(false);
+
+
   const isSmallScreen = useMediaQuery(defaultTheme.breakpoints.down("md"));
   const { allLocations } = useSelector((state) => state.requests);
   const { enqueueSnackbar } = useSnackbar();
@@ -95,6 +101,8 @@ export default function HomePage() {
     message: "found",
     status: 200,
   };
+  
+  
 
   const { fields, append, remove } = useFieldArray({
     control, // control props comes from useForm (optional: if you are using FormContext)
@@ -179,6 +187,7 @@ export default function HomePage() {
   };
 
   const isItemExist = async (itemname) => {
+    setRel(!rel)
     try {
       if (itemname) {
         const response = await axios.get(
@@ -219,7 +228,7 @@ export default function HomePage() {
                     itemName: response?.data?.name,
                     serialName: itemname,
                     quantity: 1,
-                    itemId: response?.data?.itemId,
+                    itemId: response?.data?.id,
                     status: "Pending",
                     isSerialItem: response?.data?.isserialitem,
                   });
@@ -253,6 +262,18 @@ export default function HomePage() {
     await dispatch(fetchLocations());
     setValue("location", localStorage.getItem("Location") || "8");
   }, []);
+
+  var newField = [];
+  useEffect(()=>{
+    newField = getValues("itemDetails");
+    console.log("newfilearr" , newField)
+  },[getValues("itemDetails") , rel])
+
+  const handledelete = (ind) =>{
+         const curr = getValues("itemDetails");
+         const i = curr.findIndex((item) => item.ItemId === ind);
+         remove(i);
+  }
   useEffect(() => {
     console.log("FOCUS");
     console.log("fields array", fields);
