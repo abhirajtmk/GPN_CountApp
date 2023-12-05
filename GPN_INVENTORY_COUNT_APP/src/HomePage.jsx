@@ -33,6 +33,7 @@ import CustomizedInputsStyled from "./components/CustomTextField";
 import ItemInputFormTable from "./components/ItemInputFormTable";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
 import ItemsAccordion from "./components/ItemsAccordion";
+import { get } from "lodash";
 
 const CssTableCell = styled(TableCell)((props) => ({
   padding: 2,
@@ -196,13 +197,19 @@ export default function HomePage() {
             setFocus("itemName");
             if (foundIndex !== -1) {
               // If the item exists, increment its quantity by one
-              // let qty =
-              //   Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
-              // console.log("qauntitty");
-              // console.log(qty);
-              // setValue(`itemDetails.${foundIndex}.quantity`, qty);
-              // trigger(`itemDetails.${foundIndex}.quantity`);
-              setFocus("itemName");
+              //if item is non serial then increase quantity
+              let isSerial = Boolean(
+                getValues(`itemDetails.${foundIndex}.isSerialItem`)
+              );
+              if (!isSerial) {
+                let qty =
+                  Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
+                console.log("qauntitty");
+                console.log(qty);
+                setValue(`itemDetails.${foundIndex}.quantity`, qty);
+                trigger(`itemDetails.${foundIndex}.quantity`);
+                setFocus("itemName");
+              }
             } else {
               if (response?.data?.isserialitem) {
                 if (itemname === response?.data?.name) {
