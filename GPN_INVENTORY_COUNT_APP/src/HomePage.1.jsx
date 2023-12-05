@@ -1,24 +1,13 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Button,
-  Container,
-  Divider,
   MenuItem,
-  styled,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
   useMediaQuery,
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
@@ -30,21 +19,8 @@ import { RequestActions } from "./redux/slices/requests";
 import { useEffect } from "react";
 import axios from "axios";
 import CustomizedInputsStyled from "./components/CustomTextField";
-import ItemInputFormTable from "./components/ItemInputFormTable";
-import DeleteOutline from "@mui/icons-material/DeleteOutline";
 import ItemsAccordion from "./components/ItemsAccordion";
-
-const CssTableCell = styled(TableCell)((props) => ({
-  padding: 2,
-}));
-
-const schema = yup.object({
-  location: yup.string(),
-});
-
-// TODO remove, this demo shouldn't need to reset the theme.
-
-const defaultTheme = createTheme();
+import { defaultTheme, schema } from "./HomePage";
 
 export default function HomePage() {
   const isSmallScreen = useMediaQuery(defaultTheme.breakpoints.down("md"));
@@ -96,7 +72,7 @@ export default function HomePage() {
   };
 
   const { fields, append, remove } = useFieldArray({
-    control, // control props comes from useForm (optional: if you are using FormContext)
+    control,
     name: "itemDetails", // unique name for your Field Array
   });
   const fetchExistingInventory = async () => {
@@ -190,31 +166,28 @@ export default function HomePage() {
             enqueueSnackbar("Item Found Successfully", { variant: "success" });
             const ItemDetails = getValues("itemDetails");
             let foundIndex = ItemDetails.findIndex(
-              (item) =>
-                item.itemName === itemname || item.serialName === itemname
+              (item) => item.itemName === itemname
             );
             setFocus("itemName");
             if (foundIndex !== -1) {
               // If the item exists, increment its quantity by one
-              // let qty =
-              //   Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
-              // console.log("qauntitty");
-              // console.log(qty);
-              // setValue(`itemDetails.${foundIndex}.quantity`, qty);
-              // trigger(`itemDetails.${foundIndex}.quantity`);
+              let qty =
+                Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
+              console.log("qauntitty");
+              console.log(qty);
+              setValue(`itemDetails.${foundIndex}.quantity`, qty);
+              trigger(`itemDetails.${foundIndex}.quantity`);
               setFocus("itemName");
             } else {
               if (response?.data?.isserialitem) {
                 if (itemname === response?.data?.name) {
-                  // enqueueSnackbar("Item is Serial Item", { variant: "error" });
+                  enqueueSnackbar("Item is Serial Item", { variant: "error" });
                 } else {
                   append({
-                    itemName: response?.data?.name,
-                    serialName: itemname,
+                    itemName: itemname,
                     quantity: 1,
                     itemId: response?.data?.itemId,
                     status: "Pending",
-                    isSerialItem: response?.data?.isserialitem,
                   });
                 }
               } else {
@@ -223,7 +196,6 @@ export default function HomePage() {
                   quantity: 1,
                   itemId: response?.data?.id,
                   status: "Pending",
-                  isSerialItem: response?.data?.isserialitem,
                 });
                 setFocus("itemName");
               }
@@ -248,7 +220,6 @@ export default function HomePage() {
   }, []);
   useEffect(() => {
     console.log("FOCUS");
-    console.log("fields array", fields);
     setFocus("itemName");
   }, [values.itemName]);
   return (
@@ -305,9 +276,6 @@ export default function HomePage() {
                       status="status"
                       id="demo-simple-select"
                       sx={{ width: "100%" }}
-
-                      // error={!!errors.location}
-                      // helpertext={errors.location?.message}
                     >
                       {allLocations?.map((item) => (
                         <MenuItem
@@ -367,18 +335,23 @@ export default function HomePage() {
           </Box>
           <Box
             display={"flex"}
-            width={"60%"}
-            flexDirection={isSmallScreen ? "column" : "column"}
+            flexDirection={isSmallScreen ? "column" : "row"}
           >
             {/* table */}
-            {fields.length ? (
-              <ItemsAccordion useFieldArray={fields} remove={remove} />
-            ) : (
-              ""
-            )}
+            {fields.length ? <ItemsAccordion useFieldArray={fields} /> : ""}
 
             {/* table end */}
             {/* Accordion */}
+            <Accordion>
+              <AccordionSummary
+                //  expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel2a-content"
+                id="panel2a-header"
+              >
+                <Typography>ITem</Typography>
+              </AccordionSummary>
+              <AccordionDetails></AccordionDetails>
+            </Accordion>
             {/* Accordion End */}
             {fields.length ? (
               <Box>

@@ -3,6 +3,7 @@ import {
   AccordionDetails,
   AccordionSummary,
   Box,
+  Button,
   Container,
   Table,
   TableBody,
@@ -15,19 +16,21 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { DeleteOutline } from "@mui/icons-material";
 
 const CssTableCell = styled(TableCell)((props) => ({
   padding: 2,
 }));
 
-function ItemsAccordion({ useFieldArray }) {
+function ItemsAccordion({ useFieldArray, remove }) {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
     const updatedArray = useFieldArray.reduce((acc, current) => {
-      const title = current.name;
+      const title = current.itemName;
+      const id = current.id;
       const existingGroup = acc.find((item) => item.title === title);
-
+      current = { ...current, id };
       if (existingGroup) {
         existingGroup.elements.push(current);
       } else {
@@ -39,10 +42,13 @@ function ItemsAccordion({ useFieldArray }) {
 
     setItems(updatedArray);
   }, [useFieldArray]);
-
   return (
     <>
-      {items.map(({ title, items }) => {
+      {items.map(({ title, elements }) => {
+        const totalQuantity = elements.reduce(
+          (acc, element) => acc + element.quantity,
+          0
+        );
         return (
           <Accordion>
             <AccordionSummary
@@ -50,7 +56,14 @@ function ItemsAccordion({ useFieldArray }) {
               aria-controls="panel2a-content"
               id="panel2a-header"
             >
-              <Typography>{title}</Typography>
+              <Box
+                display={"flex"}
+                width={"60%"}
+                justifyContent={"space-between"}
+              >
+                <Typography>{title}</Typography>
+                <Typography>Quantity: {totalQuantity}</Typography>
+              </Box>
             </AccordionSummary>
             <AccordionDetails>
               <Typography>
@@ -67,24 +80,24 @@ function ItemsAccordion({ useFieldArray }) {
                         </TableHead>
 
                         <TableBody>
-                          {items.map((a, i) => (
+                          {elements.map((a, i) => (
                             <>
                               {console.log(a)}
                               <TableRow>
                                 <CssTableCell>
-                                  <p>{a.itemName}</p>
+                                  <p>{a.serialName}</p>
                                 </CssTableCell>
                                 <CssTableCell>
                                   <p>{a.quantity}</p>
                                 </CssTableCell>
                                 <CssTableCell>
-                                  {/* <Button
-                                onClick={() => {
-                                  handleDelete(i, item.itemId, index);
-                                }}
-                              >
-                                <DeleteOutline />
-                              </Button> */}
+                                  <Button
+                                    onClick={() => {
+                                      remove(a.id);
+                                    }}
+                                  >
+                                    <DeleteOutline />
+                                  </Button>
                                 </CssTableCell>
                               </TableRow>
                             </>
