@@ -15,8 +15,7 @@ import {
   styled,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ClearOutlinedIcon from '@mui/icons-material/ClearOutlined';
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { DeleteOutline } from "@mui/icons-material";
 
 const CssTableCell = styled(TableCell)((props) => ({
@@ -25,75 +24,48 @@ const CssTableCell = styled(TableCell)((props) => ({
 
 function ItemsAccordion({ useFieldArray, remove }) {
   const [items, setItems] = useState([]);
-  const [open , setOpen] = useState(false);
-  
-  // const [open , setOpen] = useState('');
-  var openItems = [];
-
-  const handleClick =(id)=>{
-   setOpen(!open)
-    const index = openItems.indexOf(id);
-    const s = id.toString();
-         if(index !== -1){
-          openItems.splice(index, 1);
-         }else{
-          openItems.push(s)
-         }
-         console.log("index", index)
-         console.log("openarr" , openItems)
-  }
 
   useEffect(() => {
     const updatedArray = useFieldArray.reduce((acc, current) => {
       const title = current.itemName;
-      const id = current.itemId;
-      const isserial = current.isSerialItem;
+      const id = current.id;
       const existingGroup = acc.find((item) => item.title === title);
       current = { ...current, id };
       if (existingGroup) {
         existingGroup.elements.push(current);
       } else {
-        acc.push({ title, id, isserial, elements: [current] });
+        acc.push({ title, elements: [current] });
       }
+
       return acc;
     }, []);
 
     setItems(updatedArray);
-    console.log("itesm accordionn" , items)
-  }, [useFieldArray , open]);
+  }, [useFieldArray]);
   return (
     <>
-    <TableContainer>
-      <Table sx={{justifyContent: 'space-between'}}>
-      {items.map(({ title , id ,isserial,  elements }) => {
-
-       
-          
+      {items.map(({ title, elements }) => {
         const totalQuantity = elements.reduce(
           (acc, element) => acc + element.quantity,
           0
         );
         return (
-          < >
-                <TableRow >
-                  <TableCell align="left">{title}</TableCell>
-                  <TableCell align="center">Quantity: {isserial ? <>{totalQuantity}</> : <input type="number" width='10px' defaultValue={totalQuantity}/>}</TableCell>
-                  <TableCell align="left">{isserial ? "Serialized" : "Non Serialized"}</TableCell>
-                  {isserial ? <div> <Button onClick={()=>{handleClick(title)}}> 
-                  <ExpandMoreIcon/>
-                  </Button> </div>: <div>
-                  <Button >
-                  <ClearOutlinedIcon />
-                  </Button>
-                    
-                    </div>}
-                </TableRow>
-                {/* <Typography></Typography>
-                <Typography></Typography>
-                <Typography></Typography> */}
-                {console.log("includes" , openItems.indexOf(title.toString()) )}
-                {isserial && (openItems.indexOf(title.toString()) !== -1) ? <div>
-                  <>
+          <Accordion>
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              aria-controls="panel2a-content"
+              id="panel2a-header"
+            >
+              <Box
+                display={"flex"}
+                width={"60%"}
+                justifyContent={"space-between"}
+              >
+                <Typography>{title}</Typography>
+                <Typography>Quantity: {totalQuantity}</Typography>
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails>
               <Typography>
                 <Box>
                   <Container>
@@ -136,14 +108,10 @@ function ItemsAccordion({ useFieldArray, remove }) {
                   </Container>
                 </Box>
               </Typography>
-             </>
-                </div> : ""}
-         
-          </>
+            </AccordionDetails>
+          </Accordion>
         );
       })}
-      </Table>
-    </TableContainer>
     </>
   );
 }

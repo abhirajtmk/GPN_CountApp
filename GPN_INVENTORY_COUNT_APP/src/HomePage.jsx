@@ -27,15 +27,13 @@ import { useSnackbar } from "notistack";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import CustomSelect from "./components/CustomSelect";
 import { RequestActions } from "./redux/slices/requests";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import CustomizedInputsStyled from "./components/CustomTextField";
 import ItemInputFormTable from "./components/ItemInputFormTable";
 import DeleteOutline from "@mui/icons-material/DeleteOutline";
 import ItemsAccordion from "./components/ItemsAccordion";
-import { first, get } from "lodash";
-import { useState } from "react";
-import { Check } from "@mui/icons-material";
+import { get } from "lodash";
 
 const CssTableCell = styled(TableCell)((props) => ({
   padding: 2,
@@ -50,10 +48,9 @@ const schema = yup.object({
 const defaultTheme = createTheme();
 
 export default function HomePage() {
-
- const[rel , setRel] = useState(false);
-
-
+  const [pageSize, setPageSize] = useState(5);
+  const [pageNum, setPageNum] = useState(0);
+  const [isLastPage, setIsLastPage] = useState(false);
   const isSmallScreen = useMediaQuery(defaultTheme.breakpoints.down("md"));
   const { allLocations } = useSelector((state) => state.requests);
   const { enqueueSnackbar } = useSnackbar();
@@ -101,8 +98,6 @@ export default function HomePage() {
     message: "found",
     status: 200,
   };
-  
-  
 
   const { fields, append, remove } = useFieldArray({
     control, // control props comes from useForm (optional: if you are using FormContext)
@@ -110,15 +105,18 @@ export default function HomePage() {
   });
   const fetchExistingInventory = async () => {
     console.log("before fetch");
+    setIsLastPage(false);
     let existingIvt = await axios.get(
       `${
         window.location.href
-      }&type=getCurrentInventoryOfLocation&location=${getValues("location")}`
+      }&type=getCurrentInventoryOfLocation&location=${getValues(
+        "location"
+      )}&pageNum=0&pageSize=${pageSize}`
     );
     console.log("after fetch");
     console.log(existingIvt);
     let {
-      data: { data },
+      data: { data, isLast },
     } = existingIvt;
     console.log("data");
     console.log(data);
@@ -141,6 +139,12 @@ export default function HomePage() {
           });
         }
       });
+      setPageNum(1);
+      console.log("isLast", isLast);
+      console.log("pageNum", pageNum);
+      if (Boolean(isLast)) {
+        setIsLastPage(true);
+      }
     } else
       enqueueSnackbar("No Data Found!", {
         variant: "error",
@@ -186,8 +190,55 @@ export default function HomePage() {
     }
   };
 
+  const loadMoreInventory = async () => {
+    try {
+      let existingIvt = await axios.get(
+        `${
+          window.location.href
+        }&type=getCurrentInventoryOfLocation&location=${getValues(
+          "location"
+        )}&pageNum=${pageNum}&pageSize=${pageSize}`
+      );
+      console.log("after fetch");
+      console.log(existingIvt);
+      let {
+        data: { data, isLast },
+      } = existingIvt;
+      console.log("data");
+      console.log(data);
+      if (data && Object.keys(data).length) {
+        console.log("data");
+        console.log(data);
+        Object.keys(data).map((key, i) => {
+          // console.log( key );
+          if (!key.includes("_name")) {
+            console.log("key not includes");
+            console.log(data[`${key}_name`]);
+            console.log(`quantity`, data[key]);
+            console.log("itemId", key.split("_")[0]);
+            append({
+              itemName: data[`${key}_name`],
+              quantity: Number(data[key]),
+              itemId: key.split("_")[0],
+              status: "Pending",
+            });
+          }
+        });
+        setPageNum((prev) => prev + 1);
+        console.log("isLast", isLast);
+        console.log("pageNum", pageNum);
+        if (Boolean(isLast)) {
+          setIsLastPage(true);
+        }
+      }
+    } catch (error) {
+      enqueueSnackbar(error?.message || "Failed to get request", {
+        variant: "error",
+      });
+    }
+  };
+
   const isItemExist = async (itemname) => {
-    setRel(!rel)
     try {
       if (itemname) {
         const response = await axios.get(
@@ -210,6 +261,7 @@ export default function HomePage() {
               let isSerial = Boolean(
                 getValues(`itemDetails.${foundIndex}.isSerialItem`)
               );
+              console.log("isSerial", isSerial);
               if (!isSerial) {
                 let qty =
                   Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
@@ -228,7 +280,7 @@ export default function HomePage() {
                     itemName: response?.data?.name,
                     serialName: itemname,
                     quantity: 1,
-                    itemId: response?.data?.id,
+                    itemId: response?.data?.itemId,
                     status: "Pending",
                     isSerialItem: response?.data?.isserialitem,
                   });
@@ -262,18 +314,6 @@ export default function HomePage() {
     await dispatch(fetchLocations());
     setValue("location", localStorage.getItem("Location") || "8");
   }, []);
-
-  var newField = [];
-  useEffect(()=>{
-    newField = getValues("itemDetails");
-    console.log("newfilearr" , newField)
-  },[getValues("itemDetails") , rel])
-
-  const handledelete = (ind) =>{
-         const curr = getValues("itemDetails");
-         const i = curr.findIndex((item) => item.ItemId === ind);
-         remove(i);
-  }
   useEffect(() => {
     console.log("FOCUS");
     console.log("fields array", fields);
@@ -396,15 +436,29 @@ export default function HomePage() {
           <Box
             display={"flex"}
             width={"60%"}
+            alignItems={"center"}
             flexDirection={isSmallScreen ? "column" : "column"}
           >
-            {/* table */}
-            {fields.length ? (
-              <ItemsAccordion useFieldArray={fields} remove={remove} />
-            ) : (
-              ""
-            )}
-
+            <Box py={10} width={"100%"} alignItems={"center"}>
+              {/* table */}
+              {fields.length ? (
+                <>
+                  <ItemsAccordion useFieldArray={fields} remove={remove} />
+                  <Button
+                    selfAlign="center"
+                    variant="contained"
+                    disabled={isLastPage}
+                    onClick={() => {
+                      loadMoreInventory();
+                    }}
+                  >
+                    Load More
+                  </Button>
+                </>
+              ) : (
+                ""
+              )}
+            </Box>
             {/* table end */}
             {/* Accordion */}
             {/* Accordion End */}
