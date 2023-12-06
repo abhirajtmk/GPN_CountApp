@@ -444,16 +444,20 @@ export default function HomePage() {
               {fields.length ? (
                 <>
                   <ItemsAccordion useFieldArray={fields} remove={remove} />
-                  <Button
-                    selfAlign="center"
-                    variant="contained"
-                    disabled={isLastPage}
-                    onClick={() => {
-                      loadMoreInventory();
-                    }}
-                  >
-                    Load More
-                  </Button>
+                  {pageNum > 0 ? (
+                    <Button
+                      selfAlign="center"
+                      variant="contained"
+                      disabled={isLastPage}
+                      onClick={() => {
+                        loadMoreInventory();
+                      }}
+                    >
+                      Load More
+                    </Button>
+                  ) : (
+                    ""
+                  )}
                 </>
               ) : (
                 ""
