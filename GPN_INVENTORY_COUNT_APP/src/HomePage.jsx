@@ -265,8 +265,7 @@ export default function HomePage() {
               if (!isSerial) {
                 let qty =
                   Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
-                console.log("qauntitty");
-                console.log(qty);
+            
                 setValue(`itemDetails.${foundIndex}.quantity`, qty);
                 trigger(`itemDetails.${foundIndex}.quantity`);
                 setFocus("itemName");
@@ -280,7 +279,7 @@ export default function HomePage() {
                     itemName: response?.data?.name,
                     serialName: itemname,
                     quantity: 1,
-                    itemId: response?.data?.itemId,
+                    itemId: response?.data?.id,
                     status: "Pending",
                     isSerialItem: response?.data?.isserialitem,
                   });
@@ -319,6 +318,31 @@ export default function HomePage() {
     console.log("fields array", fields);
     setFocus("itemName");
   }, [values.itemName]);
+
+
+  const handledelete = (serialName) =>{
+    console.log("value to delete" , serialName)
+    const curr = getValues("itemDetails");
+    const i = curr.findIndex((item) => item.serialName === serialName);
+    console.log("deleteindex" , i)
+    remove(i);
+}
+
+const handleUnserialdelete = (title) =>{
+  const curr = getValues("itemDetails");
+  const i = curr.findIndex((item) => item.itemName === title);
+  console.log("deleteindex" , i)
+  remove(i);
+}
+
+const handleQnt = (val , name)=>{
+  const curr = getValues("itemDetails");
+  let foundIndex = curr.findIndex(
+    (item) => item.itemName === name);
+  // let qty =  Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
+setValue(`itemDetails.${foundIndex}.quantity`, Number(val));
+trigger(`itemDetails.${foundIndex}.quantity`);
+}
   return (
     <ThemeProvider theme={defaultTheme}>
       <Box
@@ -443,7 +467,7 @@ export default function HomePage() {
               {/* table */}
               {fields.length ? (
                 <>
-                  <ItemsAccordion useFieldArray={fields} remove={remove} />
+                  <ItemsAccordion useFieldArray={fields} handledelete={handledelete} handleUnserialdelete={handleUnserialdelete} handleQnt={handleQnt} />
                   {pageNum > 0 ? (
                     <Button
                       selfAlign="center"

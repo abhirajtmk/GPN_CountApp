@@ -14,45 +14,58 @@ import {
   Typography,
   styled,
 } from "@mui/material";
+import { Grid } from '@material-ui/core';
 import { useEffect, useState } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { DeleteOutline } from "@mui/icons-material";
+import ClearIcon from '@mui/icons-material/Clear';
 
 const CssTableCell = styled(TableCell)((props) => ({
   padding: 2,
 }));
 
-function ItemsAccordion({ useFieldArray, remove }) {
+function ItemsAccordion({ useFieldArray, handledelete , handleUnserialdelete , handleQnt }) {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
     const updatedArray = useFieldArray.reduce((acc, current) => {
       const title = current.itemName;
       const id = current.id;
+      const isserial = current.isSerialItem;
       const existingGroup = acc.find((item) => item.title === title);
       current = { ...current, id };
       if (existingGroup) {
         existingGroup.elements.push(current);
       } else {
-        acc.push({ title, elements: [current] });
+        acc.push({ title, isserial ,elements: [current] });
       }
 
       return acc;
     }, []);
 
+
     setItems(updatedArray);
   }, [useFieldArray]);
+
+
+
+
   return (
     <>
-      {items.map(({ title, elements }) => {
-        const totalQuantity = elements.reduce(
+      {items.map(({ title, isserial , elements }) => {
+        var totalQuantity = elements.reduce(
           (acc, element) => acc + element.quantity,
           0
         );
+
+        // {const  handleChange = ()=>{
+        //       totalQuantity++;
+        // }}
+
         return (
-          <Accordion>
+          <Accordion disableGutters={true}>
             <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
+              expandIcon={isserial ? <ExpandMoreIcon /> : <><ClearIcon/></>}
               aria-controls="panel2a-content"
               id="panel2a-header"
             >
@@ -61,11 +74,23 @@ function ItemsAccordion({ useFieldArray, remove }) {
                 width={"60%"}
                 justifyContent={"space-between"}
               >
-                <Typography>{title}</Typography>
-                <Typography>Quantity: {totalQuantity}</Typography>
+                 
+                 <Grid container spacing={2} justify="space-between" >
+        {/* First Typography */}
+        <Grid item>
+        <Typography>{title}{isserial ? " /(S)" : " /(NS)"}</Typography>
+        </Grid>
+        {/* Second Typography */}
+        <Grid item>
+          <Typography align="right">
+          Quantity:  {isserial ? <>{totalQuantity}</> : <> <input type="number" defaultValue={totalQuantity} style={{width : '2em'}} onChange={(e)=>{handleQnt(e.target.value , title)}} min={0}/> </>}
+          </Typography>
+        </Grid>
+      </Grid> 
               </Box>
             </AccordionSummary>
-            <AccordionDetails>
+             {isserial ? <>
+              <AccordionDetails>
               <Typography>
                 <Box>
                   <Container>
@@ -93,7 +118,7 @@ function ItemsAccordion({ useFieldArray, remove }) {
                                 <CssTableCell>
                                   <Button
                                     onClick={() => {
-                                      remove(a.id);
+                                      handledelete(a.serialName);
                                     }}
                                   >
                                     <DeleteOutline />
@@ -109,6 +134,35 @@ function ItemsAccordion({ useFieldArray, remove }) {
                 </Box>
               </Typography>
             </AccordionDetails>
+             </> : <>
+             <AccordionDetails>
+              <Table>
+                <TableRow>
+                <Table>
+      <TableBody>
+        <TableRow>
+          {/* Other cells in the row */}
+          <CssTableCell></CssTableCell>
+          <CssTableCell></CssTableCell>
+
+          {/* Single cell spanning the entire row */}
+          <CssTableCell colSpan={2} align="right"> 
+                                  <Button
+                                    onClick={() => {
+                                      handleUnserialdelete(title);
+                                    }}
+                                  >
+                                    <DeleteOutline />
+                                  </Button>
+                                </CssTableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+                </TableRow>
+              </Table>
+             </AccordionDetails>
+             
+             </>}
           </Accordion>
         );
       })}
