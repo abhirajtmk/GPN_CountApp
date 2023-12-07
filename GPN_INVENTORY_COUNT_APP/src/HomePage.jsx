@@ -168,21 +168,23 @@ export default function HomePage() {
       const locationName = allLocations.find(
         (loc) => loc?.id === locationId
       )?.name;
-      const response = await dispatch(submitCount({ items, locationName }));
 
-      if (response?.payload?.data?.status === 200) {
-        enqueueSnackbar(
-          response?.payload?.data?.message || "Custom Record created",
-          {
-            variant: "success",
-          }
-        );
-        setValue("itemDetails", []);
-      } else {
-        enqueueSnackbar("Failed to get request", {
-          variant: "error",
-        });
-      }
+      console.log("items being submitted", items);
+      // const response = await dispatch(submitCount({ items, locationName }));
+
+      // if (response?.payload?.data?.status === 200) {
+      //   enqueueSnackbar(
+      //     response?.payload?.data?.message || "Custom Record created",
+      //     {
+      //       variant: "success",
+      //     }
+      //   );
+      //   setValue("itemDetails", []);
+      // } else {
+      //   enqueueSnackbar("Failed to get request", {
+      //     variant: "error",
+      //   });
+      // }
     } catch (error) {
       enqueueSnackbar(error?.message || "Failed to get request", {
         variant: "error",
@@ -265,7 +267,7 @@ export default function HomePage() {
               if (!isSerial) {
                 let qty =
                   Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
-            
+
                 setValue(`itemDetails.${foundIndex}.quantity`, qty);
                 trigger(`itemDetails.${foundIndex}.quantity`);
                 setFocus("itemName");
@@ -319,30 +321,28 @@ export default function HomePage() {
     setFocus("itemName");
   }, [values.itemName]);
 
-
-  const handledelete = (serialName) =>{
-    console.log("value to delete" , serialName)
+  const handledelete = (serialName) => {
+    console.log("value to delete", serialName);
     const curr = getValues("itemDetails");
     const i = curr.findIndex((item) => item.serialName === serialName);
-    console.log("deleteindex" , i)
+    console.log("deleteindex", i);
     remove(i);
-}
+  };
 
-const handleUnserialdelete = (title) =>{
-  const curr = getValues("itemDetails");
-  const i = curr.findIndex((item) => item.itemName === title);
-  console.log("deleteindex" , i)
-  remove(i);
-}
+  const handleUnserialdelete = (title) => {
+    const curr = getValues("itemDetails");
+    const i = curr.findIndex((item) => item.itemName === title);
+    console.log("deleteindex", i);
+    remove(i);
+  };
 
-const handleQnt = (val , name)=>{
-  const curr = getValues("itemDetails");
-  let foundIndex = curr.findIndex(
-    (item) => item.itemName === name);
-  // let qty =  Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
-setValue(`itemDetails.${foundIndex}.quantity`, Number(val));
-trigger(`itemDetails.${foundIndex}.quantity`);
-}
+  const handleQnt = (val, name) => {
+    const curr = getValues("itemDetails");
+    let foundIndex = curr.findIndex((item) => item.itemName === name);
+    // let qty =  Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
+    setValue(`itemDetails.${foundIndex}.quantity`, Number(val));
+    trigger(`itemDetails.${foundIndex}.quantity`);
+  };
   return (
     <ThemeProvider theme={defaultTheme}>
       <Box
@@ -467,7 +467,12 @@ trigger(`itemDetails.${foundIndex}.quantity`);
               {/* table */}
               {fields.length ? (
                 <>
-                  <ItemsAccordion useFieldArray={fields} handledelete={handledelete} handleUnserialdelete={handleUnserialdelete} handleQnt={handleQnt} />
+                  <ItemsAccordion
+                    useFieldArray={fields}
+                    handledelete={handledelete}
+                    handleUnserialdelete={handleUnserialdelete}
+                    handleQnt={handleQnt}
+                  />
                   {pageNum > 0 ? (
                     <Button
                       selfAlign="center"
