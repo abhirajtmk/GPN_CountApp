@@ -125,6 +125,8 @@ define(["N/record", "N/search", "N/log", "N/format", "N/runtime"], function (
     });
 
     const customRecordId = customRecord.save();
+    log.debug("customRecord", customRecord);
+    log.debug("customRecordId", customRecord);
     return customRecordId;
   }
   function getItemByName(itemName) {
@@ -299,7 +301,9 @@ define(["N/record", "N/search", "N/log", "N/format", "N/runtime"], function (
       log.debug("ids", Object.keys(ids), Object.values(ids));
       currentInventoryCounts = getCurrentInventoryCountOfItems(
         Object.keys(ids),
-        Object.values(ids)
+        Object.values(ids),
+        0,
+        1000
       );
 
       return { items, currentInventoryCounts };

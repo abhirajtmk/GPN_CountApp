@@ -27,6 +27,7 @@ const CssTableCell = styled(TableCell)((props) => ({
 }));
 
 function ItemsAccordion({
+  forceRerender,
   useFieldArray,
   handleQnt,
   handledelete,
@@ -51,13 +52,25 @@ function ItemsAccordion({
     }, []);
 
     setItems(updatedArray);
+    console.log("items", items);
   }, [useFieldArray]);
+
+  const changeQuantity = (e, id) => {
+    const value = e.target.value;
+    const updatedArray = items.map((item) => {
+      if (item.id === id) {
+        item.quantity = value;
+      }
+      return item;
+    });
+    setItems(updatedArray);
+  };
 
   return (
     <Table>
       <TableBody>
         {items.map(({ title, isserial, elements }) => {
-          var totalQuantity = elements.reduce(
+          let totalQuantity = elements.reduce(
             (acc, element) => acc + element.quantity,
             0
           );
@@ -192,8 +205,10 @@ function ItemsAccordion({
                               type="number"
                               defaultValue={totalQuantity}
                               style={{ width: "3em" }}
+                              value={totalQuantity}
                               onChange={(e) => {
                                 handleQnt(e.target.value, title);
+                                // changeQuantity(e, title);
                               }}
                               min={0}
                             />

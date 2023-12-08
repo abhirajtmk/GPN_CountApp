@@ -51,6 +51,7 @@ export default function HomePage() {
   const [pageSize, setPageSize] = useState(5);
   const [pageNum, setPageNum] = useState(0);
   const [isLastPage, setIsLastPage] = useState(false);
+  const [forceRerender, setForceRerender] = useState(false);
   const isSmallScreen = useMediaQuery(defaultTheme.breakpoints.down("md"));
   const { allLocations } = useSelector((state) => state.requests);
   const { enqueueSnackbar } = useSnackbar();
@@ -170,21 +171,22 @@ export default function HomePage() {
       )?.name;
 
       console.log("items being submitted", items);
-      // const response = await dispatch(submitCount({ items, locationName }));
+      const response = await dispatch(submitCount({ items, locationName }));
 
-      // if (response?.payload?.data?.status === 200) {
-      //   enqueueSnackbar(
-      //     response?.payload?.data?.message || "Custom Record created",
-      //     {
-      //       variant: "success",
-      //     }
-      //   );
-      //   setValue("itemDetails", []);
-      // } else {
-      //   enqueueSnackbar("Failed to get request", {
-      //     variant: "error",
-      //   });
-      // }
+      if (response?.payload?.data?.status === 200) {
+        enqueueSnackbar(
+          response?.payload?.data?.message || "Custom Record created",
+          {
+            variant: "success",
+          }
+        );
+        console.log("response", response);
+        setValue("itemDetails", []);
+      } else {
+        enqueueSnackbar("Failed to get request", {
+          variant: "error",
+        });
+      }
     } catch (error) {
       enqueueSnackbar(error?.message || "Failed to get request", {
         variant: "error",
@@ -258,24 +260,23 @@ export default function HomePage() {
             );
             setFocus("itemName");
             if (foundIndex !== -1) {
-              // If the item exists, increment its quantity by one
-              //if item is non serial then increase quantity
               let isSerial = Boolean(
                 getValues(`itemDetails.${foundIndex}.isSerialItem`)
               );
               console.log("isSerial", isSerial);
               if (!isSerial) {
-                let qty =
-                  Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
+                let qty = getValues(`itemDetails.${foundIndex}.quantity`);
 
-                setValue(`itemDetails.${foundIndex}.quantity`, qty);
+                setValue(`itemDetails.${foundIndex}.quantity`, qty + 1);
                 trigger(`itemDetails.${foundIndex}.quantity`);
                 setFocus("itemName");
+                console.log(getValues(`itemDetails.${foundIndex}.quantity`));
+                setForceRerender((prev) => !prev);
               }
             } else {
               if (response?.data?.isserialitem) {
                 if (itemname === response?.data?.name) {
-                  // enqueueSnackbar("Item is Serial Item", { variant: "error" });
+                  enqueueSnackbar("Item is Serial Item", { variant: "info" });
                 } else {
                   append({
                     itemName: response?.data?.name,
@@ -321,6 +322,10 @@ export default function HomePage() {
     setFocus("itemName");
   }, [values.itemName]);
 
+  useEffect(() => {
+    console.log("updated quantity home field");
+  }, [fields]);
+
   const handledelete = (serialName) => {
     console.log("value to delete", serialName);
     const curr = getValues("itemDetails");
@@ -339,7 +344,6 @@ export default function HomePage() {
   const handleQnt = (val, name) => {
     const curr = getValues("itemDetails");
     let foundIndex = curr.findIndex((item) => item.itemName === name);
-    // let qty =  Number(getValues(`itemDetails.${foundIndex}.quantity`)) + 1;
     setValue(`itemDetails.${foundIndex}.quantity`, Number(val));
     trigger(`itemDetails.${foundIndex}.quantity`);
   };
@@ -468,6 +472,7 @@ export default function HomePage() {
               {fields.length ? (
                 <>
                   <ItemsAccordion
+                    forceRerender={forceRerender}
                     useFieldArray={fields}
                     handledelete={handledelete}
                     handleUnserialdelete={handleUnserialdelete}
