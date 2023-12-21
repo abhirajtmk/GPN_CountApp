@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -17,10 +18,8 @@ import {
   styled,
 } from "@mui/material";
 import { Grid } from "@material-ui/core";
-import { useEffect, useState } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { DeleteOutline } from "@mui/icons-material";
-import ClearIcon from "@mui/icons-material/Clear";
 
 const CssTableCell = styled(TableCell)((props) => ({
   padding: 2,
@@ -34,6 +33,7 @@ function ItemsAccordion({
   handleUnserialdelete,
 }) {
   const [items, setItems] = useState([]);
+  const [quantityMap, setQuantityMap] = useState({});
 
   useEffect(() => {
     const updatedArray = useFieldArray.reduce((acc, current) => {
@@ -52,18 +52,14 @@ function ItemsAccordion({
     }, []);
 
     setItems(updatedArray);
-    console.log("items", items);
   }, [useFieldArray]);
 
-  const changeQuantity = (e, id) => {
-    const value = e.target.value;
-    const updatedArray = items.map((item) => {
-      if (item.id === id) {
-        item.quantity = value;
-      }
-      return item;
-    });
-    setItems(updatedArray);
+  const changeQuantity = (value, title) => {
+    setQuantityMap((prevQuantityMap) => ({
+      ...prevQuantityMap,
+      [title]: value,
+    }));
+    handleQnt(value, title);
   };
 
   return (
@@ -74,10 +70,12 @@ function ItemsAccordion({
             (acc, element) => acc + element.quantity,
             0
           );
+          const currentQuantity = quantityMap[title] || totalQuantity;
+
           return (
             <>
               {isserial ? (
-                <TableRow>
+                <TableRow key={title}>
                   <Accordion width={"100%"} disableGutters={true} key={title}>
                     <AccordionSummary
                       expandIcon={<ExpandMoreIcon />}
@@ -154,8 +152,8 @@ function ItemsAccordion({
                   </Accordion>
                 </TableRow>
               ) : (
-                <TableRow>
-                  <Accordion>
+                <TableRow key={title}>
+                  <Accordion expanded={false}>
                     <AccordionSummary
                       expandIcon={
                         <IconButton
@@ -171,20 +169,12 @@ function ItemsAccordion({
                       aria-controls="panel2a-content"
                       id="panel2a-header"
                     >
-                      {/* <Box
-                    width="100%"
-                    sx={{
-                      padding: "1rem",
-                      boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                    }}
-                  > */}
                       <Grid
                         container
                         spacing={3}
                         justifyContent="space-between"
                         width="70%"
                       >
-                        {/* First Typography */}
                         <Grid item xs={4}>
                           <Typography
                             style={{
@@ -203,19 +193,16 @@ function ItemsAccordion({
                             Quantity:
                             <input
                               type="number"
-                              defaultValue={totalQuantity}
                               style={{ width: "3em" }}
-                              value={totalQuantity}
-                              onChange={(e) => {
-                                handleQnt(e.target.value, title);
-                                // changeQuantity(e, title);
-                              }}
+                              value={currentQuantity}
+                              onChange={(e) =>
+                                changeQuantity(e.target.value, title)
+                              }
                               min={0}
                             />
                           </Typography>
                         </Grid>
                       </Grid>
-                      {/* </Box> */}
                     </AccordionSummary>
                   </Accordion>
                 </TableRow>

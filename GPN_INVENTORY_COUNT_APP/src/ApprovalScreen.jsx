@@ -64,7 +64,7 @@ export default function ApprovalScreen() {
   }, []);
 
   useEffect(async () => {
-    if (!location) setLocation(allLocations[0]?.id);
+    if (location === "") setLocation(allLocations[0]?.id);
   }, [allLocations]);
 
   console.log({ inventoryDetails, allUsers });
