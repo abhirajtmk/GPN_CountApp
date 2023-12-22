@@ -43,10 +43,17 @@ export default function Approvaltable({
   const [selected, setSelected] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [tableData, setTableData] = useState();
+  const [filteredItems, setFilteredItems] = useState([]);
   const { isSubmitting } = useSelector((state) => state.requests);
   const { approveCount, fetchInventoryCountDetails } = RequestActions;
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (rows.items && rows.items.length > 0) {
+      setFilteredItems(filterItemsByStatus(rows.items));
+    }
+  }, [rows.items, activeStatus]);
 
   useEffect(() => {
     console.log("selected item", selected);
@@ -82,6 +89,15 @@ export default function Approvaltable({
       );
     }
     setSelected(newSelected);
+  };
+
+  const filterItemsByStatus = (items) => {
+    console.log("filterItems by status items", items);
+    if (activeStatus === "") {
+      return items;
+    } else {
+      return items.filter((item) => item.status === activeStatus);
+    }
   };
 
   const handleSubmit = async (status) => {
@@ -182,7 +198,7 @@ export default function Approvaltable({
             </TableHead>
             <TableBody>
               {!isLoading ? (
-                rows.items.map((item, index) => (
+                filteredItems.map((item, index) => (
                   <TableRow key={index}>
                     <TableCell
                       padding="checkbox"
