@@ -42,6 +42,7 @@ export default function Approvaltable({
 }) {
   const [selected, setSelected] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [submissionLoading, setSubmissionLoading] = useState(false);
   const [tableData, setTableData] = useState();
   const [filteredItems, setFilteredItems] = useState([]);
   const { isSubmitting } = useSelector((state) => state.requests);
@@ -102,6 +103,7 @@ export default function Approvaltable({
 
   const handleSubmit = async (status) => {
     try {
+      setSubmissionLoading(true);
       if (!selected.length) {
         enqueueSnackbar(
           `Select at least 1 item to ${
@@ -143,7 +145,6 @@ export default function Approvaltable({
           dispatch(fetchInventoryCountDetails(data));
           setActiveStatus("Pending");
         }
-        setSelected([]);
       } else {
         enqueueSnackbar(
           response?.payload?.data?.message || "Failed to get request",
@@ -158,6 +159,9 @@ export default function Approvaltable({
       enqueueSnackbar(error?.message || "Failed to get request", {
         variant: "error",
       });
+    } finally {
+      setSelected([]);
+      setSubmissionLoading(false);
     }
   };
 
@@ -272,8 +276,10 @@ export default function Approvaltable({
             width: "100%",
           }}
         >
-          <Button
+          <LoadingButton
             type="submit"
+            loading={submissionLoading}
+            loadingPosition="start"
             onClick={() => handleSubmit("rejected")}
             variant="contained"
             color="primary"
@@ -288,9 +294,11 @@ export default function Approvaltable({
             }}
           >
             Reject Inventory
-          </Button>
-          <Button
+          </LoadingButton>
+          <LoadingButton
             type="submit"
+            loadingPosition="start"
+            loading={submissionLoading}
             onClick={() => handleSubmit()}
             variant="contained"
             color="primary"
@@ -305,7 +313,7 @@ export default function Approvaltable({
             }}
           >
             Approve Inventory
-          </Button>
+          </LoadingButton>
         </Box>
         <SubmitPopupModal
           isOpen={isOpen}
