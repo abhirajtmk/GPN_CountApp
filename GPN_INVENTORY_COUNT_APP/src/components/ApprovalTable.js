@@ -143,6 +143,7 @@ export default function Approvaltable({
           dispatch(fetchInventoryCountDetails(data));
           setActiveStatus("Pending");
         }
+        setSelected([]);
       } else {
         enqueueSnackbar(
           response?.payload?.data?.message || "Failed to get request",
