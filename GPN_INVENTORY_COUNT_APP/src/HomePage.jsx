@@ -100,7 +100,7 @@ export default function HomePage() {
     status: 200,
   };
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control, // control props comes from useForm (optional: if you are using FormContext)
     name: "itemDetails", // unique name for your Field Array
   });
@@ -263,15 +263,21 @@ export default function HomePage() {
               let isSerial = Boolean(
                 getValues(`itemDetails.${foundIndex}.isSerialItem`)
               );
-              console.log("isSerial", isSerial);
+              console.log("isSerial on scan", isSerial);
               if (!isSerial) {
                 let qty = getValues(`itemDetails.${foundIndex}.quantity`);
-
-                setValue(`itemDetails.${foundIndex}.quantity`, qty + 1);
-                trigger(`itemDetails.${foundIndex}.quantity`);
-                setFocus("itemName");
+                console.log("quantity of scanned item", { qty });
+                console.log("item for qunt increase", ItemDetails[foundIndex]);
+                // setValue(`itemDetails.${foundIndex}.quantity`, qty + 1);
+                // trigger(`itemDetails.${foundIndex}.quantity`);
+                // setFocus("itemName");
                 console.log(getValues(`itemDetails.${foundIndex}.quantity`));
-                setForceRerender((prev) => !prev);
+                // setForceRerender((prev) => !prev);
+                handleQnt(qty + 1, itemname);
+                update(foundIndex, {
+                  ...ItemDetails[foundIndex],
+                  quantity: qty + 1,
+                });
               }
             } else {
               if (response?.data?.isserialitem) {

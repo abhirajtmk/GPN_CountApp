@@ -26,7 +26,6 @@ const CssTableCell = styled(TableCell)((props) => ({
 }));
 
 function ItemsAccordion({
-  forceRerender,
   useFieldArray,
   handleQnt,
   handledelete,
@@ -51,6 +50,7 @@ function ItemsAccordion({
       return acc;
     }, []);
 
+    console.log("useFieldArray got changed", updatedArray);
     setItems(updatedArray);
   }, [useFieldArray]);
 
@@ -61,6 +61,8 @@ function ItemsAccordion({
     }));
     handleQnt(value, title);
   };
+
+  useEffect(() => {}, [useFieldArray]);
 
   return (
     <Table>

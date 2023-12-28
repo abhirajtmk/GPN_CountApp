@@ -42,7 +42,8 @@ export default function Approvaltable({
 }) {
   const [selected, setSelected] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [submissionLoading, setSubmissionLoading] = useState(false);
+  const [rejectionLoading, setRejectionLoading] = useState(false);
+  const [approvalLoading, setApprovalLoading] = useState(false);
   const [tableData, setTableData] = useState();
   const [filteredItems, setFilteredItems] = useState([]);
   const { isSubmitting } = useSelector((state) => state.requests);
@@ -103,7 +104,11 @@ export default function Approvaltable({
 
   const handleSubmit = async (status) => {
     try {
-      setSubmissionLoading(true);
+      if (status === "rejected") {
+        setRejectionLoading(true);
+      } else {
+        setApprovalLoading(true);
+      }
       if (!selected.length) {
         enqueueSnackbar(
           `Select at least 1 item to ${
@@ -161,7 +166,8 @@ export default function Approvaltable({
       });
     } finally {
       setSelected([]);
-      setSubmissionLoading(false);
+      setRejectionLoading(false);
+      setApprovalLoading(false);
     }
   };
 
@@ -278,7 +284,7 @@ export default function Approvaltable({
         >
           <LoadingButton
             type="submit"
-            loading={submissionLoading}
+            loading={rejectionLoading}
             loadingPosition="start"
             onClick={() => handleSubmit("rejected")}
             variant="contained"
@@ -298,7 +304,7 @@ export default function Approvaltable({
           <LoadingButton
             type="submit"
             loadingPosition="start"
-            loading={submissionLoading}
+            loading={approvalLoading}
             onClick={() => handleSubmit()}
             variant="contained"
             color="primary"
